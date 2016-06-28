@@ -1,9 +1,9 @@
-/* 
+/*
  * cached-webpgr.js - simple localStorage based caching of JavaScript files
  * https://github.com/webpgr/cached-webpgr.js
  * Author: Webpgr http://webpgr.com by Falko Krause <falko@webpgr.com>
  * License: MIT
- * 
+ *
  * usage example:
  *  ```
  *  requireScript('jquery', '1.11.2', 'http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js', function(){
@@ -12,6 +12,23 @@
  *  ```
  */
 
+
+ /**
+  * ##_lsAvailable
+  * Check to make sure localStorage is available.
+  * Fallback for some older browsers and for some browsers
+  * that disable localStorge when in private browsing mode.
+  */
+function _lsAvailable(){
+    var test = 'test';
+    try {
+        localStorage.setItem(test,test);
+	localStorage.removeItem(test);
+	return true;
+    } catch (e) {
+	return false;
+    }
+}
 
 /**
  * ##_cacheScript
@@ -27,10 +44,12 @@ function _cacheScript(name, version, url) {
     xmlhttp.onreadystatechange = function() {
       if (xmlhttp.readyState == 4) {
         if (xmlhttp.status == 200) {
-          localStorage.setItem(name, JSON.stringify({
-            content: xmlhttp.responseText,
-            version: version
-          }));
+	  if (_lsAvailable()) {
+            localStorage.setItem(name, JSON.stringify({
+              content: xmlhttp.responseText,
+              version: version
+            }));
+	  }
         } else {
           console.warn('error loading '+url);
         }
@@ -89,7 +108,7 @@ function _injectScript(content, name, version, callback) {
   // cached version is not the request version, clear the cache, this will trigger a reload next time
   if (c.version != version) {
     localStorage.removeItem(name);
-    
+
   }
 
   if (callback) callback();
